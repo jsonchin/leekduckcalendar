@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spanning Pokémon GO Event Calendar</title>
+  <style>
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --border-color: #cbd5e1;
+      --primary: #3b82f6;
+      --text: #0f172a;
+      
+      /* Event Categories */
+      --cat-raid-hour: #f59e0b;
+      --cat-raid-battle: #d97706;
+      --cat-spotlight: #10b981;
+      --cat-max: #8b5cf6;
+      --cat-community: #ef4444;
+      --cat-event: #2563eb;
+      --cat-gbl: #6366f1;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .nav-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.1s;
+    }
+    .nav-btn:hover { background: #2563eb; }
+
+    /* Layout for Legend & Toggles */
+    .controls-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      background: var(--card-bg);
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      font-size: 0.85rem;
+      gap: 6px;
+    }
+
+    .badge {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    .toggles-group {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* Toggle Switch Styles */
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .switch input { 
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #cbd5e1;
+      transition: .2s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .2s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--primary);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Weekdays Header */
+    .weekdays-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .day-header {
+      text-align: center;
+      font-weight: 600;
+      padding: 8px;
+      background: #e2e8f0;
+      border-radius: 6px;
+    }
+
+    /* Calendar Weeks & Rows */
+    .calendar-weeks {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .week-row {
+      position: relative;
+      min-height: 120px;
+    }
+
+    /* Background Day Boxes Grid */
+    .days-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      height: 100%;
+    }
+
+    .day-cell {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 6px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+
+    .day-cell.other-month {
+      background: #f1f5f9;
+      opacity: 0.5;
+    }
+
+    .day-number {
+      font-weight: bold;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+
+    /* Spanning Events Grid Layer */
+    .events-layer {
+      position: relative;
+      padding-top: 28px;
+      padding-bottom: 8px;
+      padding-left: 4px;
+      padding-right: 4px;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px 8px; 
+      z-index: 2;
+    }
+
+    .event-bar {
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      border-radius: 4px;
+      color: white;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+      transition: transform 0.1s, filter 0.1s;
+    }
+
+    .event-bar:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    /* Category Colors */
+    .cat-raid-hour { background-color: var(--cat-raid-hour); }
+    .cat-raid-battle { background-color: var(--cat-raid-battle); }
+    .cat-spotlight { background-color: var(--cat-spotlight); }
+    .cat-max { background-color: var(--cat-max); }
+    .cat-community { background-color: var(--cat-community); }
+    .cat-event { background-color: var(--cat-event); }
+    .cat-gbl { background-color: var(--cat-gbl); }
+
+    .loading {
+      text-align: center;
+      font-size: 1.1rem;
+      padding: 40px;
+      background: white;
+      border-radius: 8px;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.4);
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      max-width: 450px;
+      width: 90%;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .link-btn {
+      padding: 8px 16px;
+      background: #10b981;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      display: inline-block;
+    }
+    .link-btn:hover { background: #059669; }
+
+    .close-btn {
+      padding: 8px 16px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .close-btn:hover { background: #2563eb; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <button class="nav-btn" id="prevBtn" onclick="changeMonth(-1)">← Prev</button>
+      <h1 id="monthTitle">Events Calendar</h1>
+      <button class="nav-btn" id="nextBtn" onclick="changeMonth(1)">Next →</button>
+    </header>
+
+    <div class="controls-bar">
+      <div class="legend">
+        <div class="legend-item"><span class="badge cat-raid-hour"></span> Raid Hour</div>
+        <div class="legend-item"><span class="badge cat-spotlight"></span> Spotlight Hour</div>
+        <div class="legend-item"><span class="badge cat-max"></span> Max Mondays</div>
+        <div class="legend-item"><span class="badge cat-community"></span> Community Day</div>
+        <div class="legend-item"><span class="badge cat-raid-battle"></span> Raid Battles</div>
+        <div class="legend-item"><span class="badge cat-event"></span> General Event</div>
+      </div>
+      
+      <div class="toggles-group">
+        <label class="toggle-container">
+          Hide events &gt; 4 days
+          <div class="switch">
+            <input type="checkbox" id="hideLongerThan4Toggle" checked onchange="renderCalendar()">
+            <span class="slider"></span>
+          </div>
+        </label>
+
+        <label class="toggle-container">
+          Hide events &gt; 2 weeks
+          <div class="switch">
+            <input type="checkbox" id="hideLongEventsToggle" checked onchange="renderCalendar()">
+            <span class="slider"></span>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <div class="weekdays-grid">
+      <div class="day-header">Sun</div>
+      <div class="day-header">Mon</div>
+      <div class="day-header">Tue</div>
+      <div class="day-header">Wed</div>
+      <div class="day-header">Thu</div>
+      <div class="day-header">Fri</div>
+      <div class="day-header">Sat</div>
+    </div>
+
+    <div id="loadingState" class="loading">Loading & scraping live events...</div>
+    <div class="calendar-weeks" id="calendarWeeks"></div>
+  </div>
+
+  <div class="modal" id="eventModal">
+    <div class="modal-content">
+      <h3 id="modalTitle"></h3>
+      <p><strong>Type:</strong> <span id="modalType"></span></p>
+      <p><strong>Start:</strong> <span id="modalStart"></span></p>
+      <p><strong>End:</strong> <span id="modalEnd"></span></p>
+      
+      <div class="modal-actions">
+        <a id="modalLink" href="#" target="_blank" class="link-btn" style="display: none;">View on Leek Duck</a>
+        <button class="close-btn" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentDate = new Date();
+    let fetchedEvents = [];
+
+    function getCategoryClass(type = '', title = '') {
+      const lower = (type + ' ' + title).toLowerCase();
+      if (lower.includes('raid hour')) return 'cat-raid-hour';
+      if (lower.includes('spotlight')) return 'cat-spotlight';
+      if (lower.includes('max monday') || lower.includes('dynamax')) return 'cat-max';
+      if (lower.includes('community day')) return 'cat-community';
+      if (lower.includes('raid battle') || lower.includes('raid')) return 'cat-raid-battle';
+      if (lower.includes('go battle league')) return 'cat-gbl';
+      return 'cat-event';
+    }
+
+    async function fetchLiveEvents() {
+      const loadingEl = document.getElementById('loadingState');
+
+      const endpoints = [
+        'https://raw.githubusercontent.com/zhenga8533/leak-duck/data/events.json',
+        'https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/events.json'
+      ];
+
+      for (const url of endpoints) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) continue;
+
+          let data = await res.json();
+          if (!Array.isArray(data)) {
+            if (data && Array.isArray(data.events)) data = data.events;
+            else if (data && Array.isArray(data.data)) data = data.data;
+            else continue;
+          }
+
+          fetchedEvents = data.map(item => {
+            const title = item.name || item.title || item.heading || 'Pokémon GO Event';
+            const type = item.eventType || item.type || item.category || 'Event';
+            const startRaw = item.start || item.startDate || item.start_date;
+            const endRaw = item.end || item.endDate || item.end_date;
+            const linkRaw = item.link || item.url || '';
+
+            return {
+              title,
+              type,
+              start: startRaw ? new Date(startRaw) : new Date(),
+              end: endRaw ? new Date(endRaw) : new Date(),
+              link: linkRaw,
+              raw: item
+            };
+          }).filter(e => !isNaN(e.start.getTime()));
+
+          if (fetchedEvents.length > 0) {
+            loadingEl.style.display = 'none';
+            renderCalendar();
+            return;
+          }
+        } catch (err) {
+          console.warn(`Failed fetching from ${url}:`, err);
+        }
+      }
+
+      loadingEl.innerText = 'Unable to fetch event data. Please check connection.';
+    }
+
+    function renderCalendar() {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+
+      // Update Header Title
+      document.getElementById('monthTitle').innerText = 
+        currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+      // Update Navigation Buttons to display explicit month names
+      const prevDate = new Date(year, month - 1, 1);
+      const nextDate = new Date(year, month + 1, 1);
+      
+      const prevMonthName = prevDate.toLocaleString('default', { month: 'long' });
+      const nextMonthName = nextDate.toLocaleString('default', { month: 'long' });
+
+      document.getElementById('prevBtn').innerText = `← ${prevMonthName}`;
+      document.getElementById('nextBtn').innerText = `${nextMonthName} →`;
+
+      const calendarEl = document.getElementById('calendarWeeks');
+      calendarEl.innerHTML = '';
+
+      // --- FILTERING LOGIC ---
+      const hideLongEvents = document.getElementById('hideLongEventsToggle').checked;
+      const hideLongerThan4 = document.getElementById('hideLongerThan4Toggle').checked;
+      
+      let eventsToProcess = fetchedEvents.filter(e => {
+        const durationDays = (e.end - e.start) / (1000 * 60 * 60 * 24);
+        
+        if (hideLongEvents && durationDays > 14) return false;
+        if (hideLongerThan4 && durationDays > 4) return false;
+        
+        return true; 
+      });
+
+      const firstDate = new Date(year, month, 1);
+      const lastDate = new Date(year, month + 1, 0);
+
+      // Start on Sunday of the first week
+      let startCalDate = new Date(firstDate);
+      startCalDate.setDate(1 - firstDate.getDay());
+
+      // End on Saturday of the last week
+      let endCalDate = new Date(lastDate);
+      endCalDate.setDate(lastDate.getDate() + (6 - lastDate.getDay()));
+
+      let curr = new Date(startCalDate);
+      let weeks = [];
+      while (curr <= endCalDate) {
+        let weekDays = [];
+        for (let i = 0; i < 7; i++) {
+          weekDays.push(new Date(curr));
+          curr.setDate(curr.getDate() + 1);
+        }
+        weeks.push(weekDays);
+      }
+
+      weeks.forEach(week => {
+        const weekEl = document.createElement('div');
+        weekEl.className = 'week-row';
+
+        // 1. Render Background Days Grid
+        const daysGrid = document.createElement('div');
+        daysGrid.className = 'days-grid';
+
+        week.forEach(day => {
+          const dayCell = document.createElement('div');
+          dayCell.className = 'day-cell';
+          if (day.getMonth() !== month) {
+            dayCell.classList.add('other-month');
+          }
+
+          const dayNum = document.createElement('div');
+          dayNum.className = 'day-number';
+          dayNum.innerText = day.getDate();
+          dayCell.appendChild(dayNum);
+
+          daysGrid.appendChild(dayCell);
+        });
+
+        weekEl.appendChild(daysGrid);
+
+        // 2. Render Spanning Events Layer
+        const weekStart = new Date(week[0].getFullYear(), week[0].getMonth(), week[0].getDate());
+        const weekEnd = new Date(week[6].getFullYear(), week[6].getMonth(), week[6].getDate(), 23, 59, 59);
+
+        let weekEvents = eventsToProcess.filter(e => e.start <= weekEnd && e.end >= weekStart);
+
+        let spans = weekEvents.map(e => {
+          let startCol = 1;
+          let endCol = 8;
+
+          for (let c = 0; c < 7; c++) {
+            let d = week[c];
+            let dStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            let dEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59);
+
+            if (e.start <= dEnd && startCol === 1 && e.start >= dStart) {
+              startCol = c + 1;
+            }
+            if (e.end >= dStart) {
+              endCol = c + 2;
+            }
+          }
+
+          const eStartZero = new Date(e.start.getFullYear(), e.start.getMonth(), e.start.getDate());
+          if (eStartZero < weekStart) startCol = 1;
+
+          const eEndZero = new Date(e.end.getFullYear(), e.end.getMonth(), e.end.getDate());
+          if (eEndZero > weekEnd) endCol = 8;
+
+          return {
+            event: e,
+            startCol: Math.max(1, startCol),
+            endCol: Math.min(8, endCol)
+          };
+        });
+
+        // Sort: Longest duration first, then left-to-right
+        spans.sort((a, b) => {
+          if (a.startCol !== b.startCol) return a.startCol - b.startCol;
+          return (b.endCol - b.startCol) - (a.endCol - a.startCol);
+        });
+
+        // Assign vertical rows (slots) so overlapping bars stack nicely
+        let slots = [];
+        spans.forEach(item => {
+          let allocatedSlot = -1;
+          for (let s = 0; s < slots.length; s++) {
+            let fits = true;
+            for (let occupied of slots[s]) {
+              if (!(item.endCol <= occupied.startCol || item.startCol >= occupied.endCol)) {
+                fits = false;
+                break;
+              }
+            }
+            if (fits) {
+              allocatedSlot = s;
+              slots[s].push({ startCol: item.startCol, endCol: item.endCol });
+              break;
+            }
+          }
+
+          if (allocatedSlot === -1) {
+            allocatedSlot = slots.length;
+            slots.push([{ startCol: item.startCol, endCol: item.endCol }]);
+          }
+
+          item.slot = allocatedSlot + 1;
+        });
+
+        const eventsLayer = document.createElement('div');
+        eventsLayer.className = 'events-layer';
+
+        spans.forEach(item => {
+          const bar = document.createElement('div');
+          bar.className = `event-bar ${getCategoryClass(item.event.type, item.event.title)}`;
+          bar.style.gridColumn = `${item.startCol} / ${item.endCol}`;
+          bar.style.gridRow = `${item.slot}`;
+
+          let label = item.event.title;
+          if (item.startCol === 1 && item.event.start < weekStart) label = '◀ ' + label;
+          if (item.endCol === 8 && item.event.end > weekEnd) label = label + ' ▶';
+
+          bar.innerText = label;
+          bar.onclick = () => openModal(item.event);
+
+          eventsLayer.appendChild(bar);
+        });
+
+        weekEl.appendChild(eventsLayer);
+        calendarEl.appendChild(weekEl);
+      });
+    }
+
+    function changeMonth(direction) {
+      currentDate.setMonth(currentDate.getMonth() + direction);
+      renderCalendar();
+    }
+
+    function openModal(event) {
+      document.getElementById('modalTitle').innerText = event.title;
+      document.getElementById('modalType').innerText = event.type;
+      
+      const options = { weekday: 'long', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+      document.getElementById('modalStart').innerText = event.start.toLocaleString(undefined, options);
+      document.getElementById('modalEnd').innerText = event.end.toLocaleString(undefined, options);
+      
+      const linkBtn = document.getElementById('modalLink');
+      if (event.link) {
+        linkBtn.href = event.link;
+        linkBtn.style.display = 'inline-block';
+      } else {
+        linkBtn.style.display = 'none';
+      }
+
+      document.getElementById('eventModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('eventModal').style.display = 'none';
+    }
+
+    fetchLiveEvents();
+  </script>
+</body>
+</html>
