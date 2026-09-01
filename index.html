@@ -299,6 +299,52 @@
       font-size: 0.9rem;
     }
     .close-btn:hover { background: #2563eb; }
+
+    /* Responsive adjustments for mobile screens */
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+
+  header {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .controls-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .legend {
+    justify-content: center;
+    font-size: 0.75rem;
+  }
+
+  .toggles-group {
+    justify-content: space-around;
+  }
+
+  /* Reduce week row height on mobile since fewer long events show */
+  .week-row {
+    min-height: 90px;
+  }
+
+  .day-cell {
+    padding: 4px;
+  }
+
+  .day-number {
+    font-size: 0.75rem;
+  }
+
+  .event-bar {
+    font-size: 0.65rem;
+    padding: 2px 4px;
+  }
+}
   </style>
 </head>
 <body>
