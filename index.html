@@ -440,7 +440,7 @@
       document.getElementById('monthTitle').innerText = 
         currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
 
-      // Update Navigation Buttons to display explicit month names
+      // Update Navigation Buttons based on currentDate
       const prevDate = new Date(year, month - 1, 1);
       const nextDate = new Date(year, month + 1, 1);
       
